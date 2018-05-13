@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>跳一跳</title>
+		<meta name="viewport" content="width=device-width, maximum-scale=1, user-scalable=no">
+		<link rel="shortcut icon" href="../img/tiaoyitiao.ico">
+		<link rel="stylesheet" href="css/jump.css">
+		<script src="js/jquery-1.10.2.min.js"></script>
+		<script src="js/index.js"></script>
+	</head>
+
+	<body>
+		<div class="mask">
+			<div class="content">
+				<div class="score-container">
+					<p class="title">本次得分</p>
+					<p class="score">0</p>
+				</div>
+				
+				<button class="restart">重新开始</button>
+				<button class="history" id="search">历史成绩</button>
+				<button class="record" id="push">记录成绩</button>
+				
+			</div>
+			
+		</div>
+		<div class="info">
+			首款Dapp游戏-跳一跳
+			</h3>
+			<div class="score-gaming">
+				<span class="score-current"></span>
+			</div>
+		</div>
+		<script src="../js/libs/three.min.js"></script>
+		<script src="js/game.js"></script>
+		<script src="js/main.js"></script>
+	<script src=lib/jquery-3.3.1.min.js></script>
+	<script src=lib/nebPay.js></script>
+	<script src=lib/bootstrap-4.0.0-dist/js/bootstrap.min.js></script>
+	<script src=lib/nebulas.js></script>
+<script>
+
+    "use strict";
+	
+	var username = prompt("请输入用户名，相同用户只可保存一次哦！");
+	while(username.trim().length == 0)
+	{
+		username = prompt("请输入用户名，相同用户只可保存一次哦！");
+		alert(username);
+	}
+    var dappAddress = "n1ynPBknGYJPTs7h8wncGf7KBxcEGnQjuEk";
+
+    var nebulas = require("nebulas"),
+        Account = nebulas.Account,
+        neb = new nebulas.Neb();
+    neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
+
+    $("#search").click(function(){
+     
+        var from = Account.NewAccount().getAddressString();
+        var value = "0";
+        var nonce = "0"
+        var gas_price = "1000000"
+        var gas_limit = "2000000"
+        var callFunction = "get";
+        var callArgs = "[\"" + username + "\"]"; //in the form of ["args"]
+        var contract = {
+            "function": callFunction,
+            "args": callArgs
+        }
+
+        neb.api.call(from,dappAddress,value,nonce,gas_price,gas_limit,contract).then(function (resp) {
+            cbSearch(resp)
+        }).catch(function (err) {
+            //cbSearch(err)
+            console.log("error:" + err.message)
+        })
+
+    })
+
+
+    function cbSearch(resp) {
+        var result = resp.result    
+        console.log("return of rpc call: " + JSON.stringify(result))
+
+        if (result === 'null'){
+			alert("亲，您还未玩过此游戏或没有记录过成绩！！！")
+        } else{
+          
+            try{
+                result = JSON.parse(result)
+                console.log("result===============>"+result);
+            }catch (err){
+               
+            }
+            if (!!result.key){      
+			    alert("历史成绩为"+result.value)
+            } else {      
+
+            }
+
+        }
+
+    }
+
+    var NebPay = require("nebpay");     
+    var nebPay = new NebPay();
+    var serialNumber
+
+    $("#push").click(function() {
+
+        var to = dappAddress;
+        var value = "0";
+        var callFunction = "save"
+        var callArgs = "[\"" + username + "\",\"" + $(".score").html() + "\"]";
+		console.log(callArgs.toString())
+        serialNumber = nebPay.call(to, value, callFunction, callArgs, {   
+            listener: cbPush       
+        });
+			
+        intervalQuery = setInterval(function () {
+            funcIntervalQuery();
+        }, 5000);
+    });
+
+    var intervalQuery
+    function funcIntervalQuery() {
+        nebPay.queryPayInfo(serialNumber)  
+            .then(function (resp) {
+                console.log("tx result: " + resp)
+                var respObject = JSON.parse(resp)                    
+                if(respObject.code === 0){
+                    clearInterval(intervalQuery)
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+    }
+
+    function cbPush(resp) {
+       console.log("response of push:" + JSON.stringify(resp))
+    }
+    
+   
+</script>
+	</body>
+
+</html>
