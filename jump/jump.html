@@ -43,11 +43,11 @@
 
     "use strict";
 	
-	var username = prompt("请输入用户名，相同用户只可保存一次哦！");
-	while(username.trim().length == 0)
+	var username = window.prompt("请输入用户名，相同用户只可保存一次哦！");
+	console.log(username);
+	while(username == null || username.toString().trim().length == 0 )
 	{
 		username = prompt("请输入用户名，相同用户只可保存一次哦！");
-		alert(username);
 	}
     var dappAddress = "n1ynPBknGYJPTs7h8wncGf7KBxcEGnQjuEk";
 
